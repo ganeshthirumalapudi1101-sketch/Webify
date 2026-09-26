@@ -1,23 +1,1173 @@
 from io import BytesIO
-from zipfile import ZipFile,ZIP_DEFLATED
+from zipfile import ZipFile, ZIP_DEFLATED
 from html import escape
 import re
 
-def esc(x): return escape(str(x or ''))
-def make_html(plan,req):
- color=req.get('primary_color') or '#6C4CFF'; name=esc(plan.get('title','Webify Site')); hero_title=esc(plan.get('hero_title','Your new website')); hero_sub=esc(plan.get('hero_subtitle','')); cta=esc(plan.get('cta','Get Started'))
- chunks=[]
- for s in plan.get('sections',[]):
-  sid=re.sub(r'[^a-z0-9]+','-',str(s.get('title','section')).lower()).strip('-')
-  cards=''.join(f'<article class="card"><h3>{esc(i.get("title"))}</h3><p>{esc(i.get("text"))}</p><small>{esc(i.get("meta"))}</small></article>' for i in s.get('items',[]))
-  chunks.append(f'<section class="section" id="{sid}"><div class="container"><span class="eyebrow">WEBIFY</span><h2>{esc(s.get("title"))}</h2><p class="lead">{esc(s.get("intro"))}</p><div class="grid">{cards}</div></div></section>')
- nav=''.join(f'<a href="#{re.sub(r"[^a-z0-9]+","-",str(x).lower()).strip("-")}">{esc(x)}</a>' for x in plan.get('nav',[])[1:])
- return f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{esc(plan.get("seo_title",name))}</title><meta name="description" content="{esc(plan.get("seo_description",plan.get("summary","")))}"><meta name="keywords" content="{esc(", ".join(plan.get("keywords",[])))}"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="style.css"></head><body style="--brand:{color}"><header class="site-header"><div class="container nav"><a class="logo" href="#home">{name}</a><button class="menu" aria-label="Open navigation" onclick="toggleMenu()">☰</button><nav id="nav"><a href="#home">Home</a>{nav}</nav></div></header><main><section class="hero" id="home"><div class="container hero-inner"><span class="pill">✦ BUILT WITH WEBIFY</span><h1>{hero_title}</h1><p>{hero_sub}</p><a class="btn" href="#contact">{cta} <span>→</span></a></div></section>{''.join(chunks)}<section class="section" id="contact"><div class="container contact"><div><span class="eyebrow">CONTACT</span><h2>Ready to start?</h2><p>{esc(req.get('business_description','Tell us what you need and we will be in touch.'))}</p><p class="contact-details">{esc(req.get('contact',''))}</p></div><form onsubmit="submitDemo(event)"><input required placeholder="Your name"><input required type="email" placeholder="Email address"><textarea required placeholder="How can we help?"></textarea><button class="btn" type="submit">{cta}</button><div id="form-message"></div></form></div></section></main><footer><div class="container footer"><span>© <span id="year"></span> {name}</span><span>{esc(req.get('footer_note','Built with Webify.'))}</span></div></footer><script src="script.js"></script></body></html>'''
 
-def make_css(): return '''*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#fbfbfc;color:#111216;font-family:"DM Sans",sans-serif}a{text-decoration:none;color:inherit}.container{width:min(1160px,92%);margin:auto}.site-header{position:sticky;top:0;z-index:20;background:#fbfbfce6;backdrop-filter:blur(18px);border-bottom:1px solid #e8e8ec}.nav{height:76px;display:flex;align-items:center;justify-content:space-between}.logo{font:700 1.2rem "Space Grotesk"}.nav nav{display:flex;gap:26px;color:#666a73;font-weight:600}.nav nav a:hover{color:var(--brand)}.menu{display:none;border:0;background:none;font-size:1.5rem}.hero{min-height:650px;display:grid;place-items:center;background:radial-gradient(circle at 80% 15%,#6c4cff38,transparent 32%),linear-gradient(135deg,#101114,#201d29);color:#fff}.hero-inner{text-align:center;padding:90px 0}.pill,.eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.14em;color:var(--brand)}.pill{display:inline-block;border:1px solid #ffffff2b;padding:8px 13px;border-radius:999px;color:#ddd}.hero h1{font:700 clamp(3rem,8vw,6.8rem)/.96 "Space Grotesk";letter-spacing:-.065em;max-width:980px;margin:24px auto}.hero p{max-width:760px;margin:0 auto 30px;color:#c7c7ce;font-size:1.18rem;line-height:1.75}.btn{display:inline-flex;gap:12px;align-items:center;justify-content:center;background:var(--brand);color:white;border:0;padding:14px 20px;border-radius:12px;font-weight:800;cursor:pointer}.section{padding:110px 0;border-bottom:1px solid #e9e9ed}.section h2{font:700 clamp(2.1rem,4vw,4rem)/1.05 "Space Grotesk";letter-spacing:-.05em;max-width:760px;margin:12px 0 18px}.lead{color:#696d76;max-width:760px;line-height:1.8;font-size:1.05rem}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:38px}.card{background:#fff;border:1px solid #e7e7eb;border-radius:20px;padding:28px;min-height:190px;box-shadow:0 10px 40px #15151a08}.card h3{font:700 1.25rem "Space Grotesk"}.card p{color:#70737b;line-height:1.7}.card small{color:var(--brand);font-weight:700}.contact{display:grid;grid-template-columns:1fr 1fr;gap:70px;align-items:start}.contact form{display:grid;gap:12px}.contact input,.contact textarea{width:100%;padding:15px;border:1px solid #dddde3;border-radius:12px;background:white;font:inherit}.contact textarea{min-height:150px;resize:vertical}.contact-details{white-space:pre-line;color:#676b73}footer{padding:28px 0}.footer{display:flex;justify-content:space-between;gap:20px;color:#7a7d84;font-size:.9rem}@media(max-width:760px){.nav nav{display:none;position:absolute;top:76px;left:0;right:0;background:#fff;padding:20px;flex-direction:column;border-bottom:1px solid #eee}.nav nav.open{display:flex}.menu{display:block}.grid,.contact{grid-template-columns:1fr}.section{padding:75px 0}.footer{flex-direction:column}}'''
+def esc(value):
+    return escape(str(value or ""))
 
-def build_website_zip(plan,req):
- html=make_html(plan,req); memory=BytesIO()
- with ZipFile(memory,'w',ZIP_DEFLATED) as z:
-  z.writestr('index.html',html); z.writestr('style.css',make_css()); z.writestr('script.js','function submitDemo(e){e.preventDefault();document.getElementById("form-message").textContent="Thanks! Your message has been captured in this demo."}function toggleMenu(){document.getElementById("nav").classList.toggle("open")}document.getElementById("year").textContent=new Date().getFullYear();'); z.writestr('README.md','# Website generated by Webify\n\nOpen index.html to preview the site.\n')
- return {'title':plan.get('title','Webify Website'),'summary':plan.get('summary',''),'slug':plan.get('slug') or 'webify-site','html':html,'zip_bytes':memory.getvalue(),'files':['index.html','style.css','script.js','README.md']}
+
+def slugify(value):
+    return re.sub(
+        r"[^a-z0-9]+",
+        "-",
+        str(value).lower()
+    ).strip("-")
+
+
+# ============================================================
+# CARD GENERATOR
+# ============================================================
+
+def render_items(items):
+
+    output = ""
+
+    for item in items or []:
+
+        output += f"""
+        <article class="webify-card reveal">
+
+            <div class="card-number">
+                {esc(item.get("meta", ""))}
+            </div>
+
+            <h3>
+                {esc(item.get("title", ""))}
+            </h3>
+
+            <p>
+                {esc(item.get("text", ""))}
+            </p>
+
+        </article>
+        """
+
+    return output
+
+
+# ============================================================
+# SECTION GENERATOR
+# ============================================================
+
+def render_section(section):
+
+    sid = (
+        section.get("id")
+        or slugify(
+            section.get(
+                "title",
+                "section"
+            )
+        )
+    )
+
+    section_type = section.get(
+        "type",
+        "content"
+    )
+
+    items = section.get(
+        "items",
+        []
+    )
+
+    cards = render_items(items)
+
+    # --------------------------------------------------------
+    # SERVICES / CARDS
+    # --------------------------------------------------------
+
+    if section_type in (
+        "services",
+        "featured_items",
+        "features",
+        "products"
+    ):
+
+        return f"""
+        <section
+            class="webify-section section-{section_type}"
+            id="{sid}"
+        >
+
+            <div class="webify-container">
+
+                <div class="section-heading reveal">
+
+                    <span class="eyebrow">
+                        {esc(section.get("eyebrow", ""))}
+                    </span>
+
+                    <h2>
+                        {esc(section.get("title", ""))}
+                    </h2>
+
+                    <p>
+                        {esc(section.get("description", ""))}
+                    </p>
+
+                </div>
+
+                <div class="card-grid">
+
+                    {cards}
+
+                </div>
+
+            </div>
+
+        </section>
+        """
+
+
+    # --------------------------------------------------------
+    # TESTIMONIALS
+    # --------------------------------------------------------
+
+    if section_type == "testimonials":
+
+        return f"""
+        <section
+            class="webify-section testimonials"
+            id="{sid}"
+        >
+
+            <div class="webify-container">
+
+                <div class="section-heading reveal">
+
+                    <span class="eyebrow">
+                        {esc(section.get("eyebrow", "TESTIMONIALS"))}
+                    </span>
+
+                    <h2>
+                        {esc(section.get("title", ""))}
+                    </h2>
+
+                </div>
+
+                <div class="testimonial-grid">
+
+                    {cards}
+
+                </div>
+
+            </div>
+
+        </section>
+        """
+
+
+    # --------------------------------------------------------
+    # CONTACT
+    # --------------------------------------------------------
+
+    if section_type == "contact":
+
+        return f"""
+        <section
+            class="webify-section contact-section"
+            id="{sid}"
+        >
+
+            <div class="webify-container contact-layout">
+
+                <div class="contact-copy reveal">
+
+                    <span class="eyebrow">
+                        {esc(section.get("eyebrow", "CONTACT"))}
+                    </span>
+
+                    <h2>
+                        {esc(section.get("title", "Let's talk"))}
+                    </h2>
+
+                    <p>
+                        {esc(section.get("description", ""))}
+                    </p>
+
+                </div>
+
+
+                <form
+                    class="webify-form reveal"
+                    onsubmit="submitWebifyForm(event)"
+                >
+
+                    <input
+                        required
+                        placeholder="Your name"
+                    >
+
+                    <input
+                        required
+                        type="email"
+                        placeholder="Email address"
+                    >
+
+                    <input
+                        placeholder="Phone number"
+                    >
+
+                    <textarea
+                        required
+                        placeholder="Tell us about your requirement..."
+                    ></textarea>
+
+                    <button
+                        class="webify-button"
+                        type="submit"
+                    >
+                        {esc(
+                            section.get(
+                                "cta",
+                                "Send Message"
+                            )
+                        )}
+                        →
+                    </button>
+
+                    <div
+                        id="webify-form-message"
+                    ></div>
+
+                </form>
+
+            </div>
+
+        </section>
+        """
+
+
+    # --------------------------------------------------------
+    # DEFAULT CONTENT SECTION
+    # --------------------------------------------------------
+
+    return f"""
+    <section
+        class="webify-section"
+        id="{sid}"
+    >
+
+        <div class="webify-container">
+
+            <div class="content-section reveal">
+
+                <span class="eyebrow">
+                    {esc(section.get("eyebrow", ""))}
+                </span>
+
+                <h2>
+                    {esc(section.get("title", ""))}
+                </h2>
+
+                <p>
+                    {esc(section.get("description", ""))}
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+    """
+
+
+# ============================================================
+# HTML GENERATOR
+# ============================================================
+
+def make_html(plan, requirements):
+
+    style = plan.get(
+        "visual_style",
+        {}
+    )
+
+    hero = plan.get(
+        "hero",
+        {}
+    )
+
+    name = esc(
+        plan.get(
+            "title",
+            "Webify Website"
+        )
+    )
+
+    primary = style.get(
+        "primary",
+        "#6C4CFF"
+    )
+
+    secondary = style.get(
+        "secondary",
+        "#ECE8FF"
+    )
+
+    accent = style.get(
+        "accent",
+        "#8B76FF"
+    )
+
+    background = style.get(
+        "background",
+        "#FAFAFC"
+    )
+
+    surface = style.get(
+        "surface",
+        "#FFFFFF"
+    )
+
+    text = style.get(
+        "text",
+        "#111216"
+    )
+
+    muted = style.get(
+        "muted",
+        "#6B6F78"
+    )
+
+    heading_font = style.get(
+        "heading_font",
+        "Space Grotesk"
+    )
+
+    body_font = style.get(
+        "body_font",
+        "DM Sans"
+    )
+
+
+    navigation = ""
+
+    for item in plan.get(
+        "navigation",
+        []
+    ):
+
+        target = (
+            "home"
+            if str(item).lower() == "home"
+            else slugify(item)
+        )
+
+        navigation += f"""
+        <a href="#{target}">
+            {esc(item)}
+        </a>
+        """
+
+
+    sections = ""
+
+    for section in plan.get(
+        "sections",
+        []
+    ):
+
+        sections += render_section(
+            section
+        )
+
+
+    footer = plan.get(
+        "footer",
+        {}
+    )
+
+
+    return f"""
+<!doctype html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+>
+
+<title>
+    {esc(
+        plan.get(
+            "seo",
+            {}
+        ).get(
+            "title",
+            name
+        )
+    )}
+</title>
+
+<meta
+    name="description"
+    content="{esc(
+        plan.get(
+            "seo",
+            {}
+        ).get(
+            "description",
+            plan.get("summary", "")
+        )
+    )}"
+>
+
+<meta
+    name="keywords"
+    content="{esc(
+        ", ".join(
+            plan.get(
+                "seo",
+                {}
+            ).get(
+                "keywords",
+                []
+            )
+        )
+    )}"
+>
+
+
+<link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+>
+
+<link
+    href="https://fonts.googleapis.com/css2?
+family=DM+Sans:wght@400;500;600;700&
+family=Space+Grotesk:wght@500;600;700&
+family=Playfair+Display:wght@500;600;700
+&display=swap"
+    rel="stylesheet"
+>
+
+<link
+    rel="stylesheet"
+    href="style.css"
+>
+
+</head>
+
+
+<body
+    style="
+        --brand:{esc(primary)};
+        --secondary:{esc(secondary)};
+        --accent:{esc(accent)};
+        --background:{esc(background)};
+        --surface:{esc(surface)};
+        --ink:{esc(text)};
+        --muted:{esc(muted)};
+        --heading-font:'{esc(heading_font)}';
+        --body-font:'{esc(body_font)}';
+    "
+>
+
+
+<header class="webify-header">
+
+    <div class="webify-container nav">
+
+        <a
+            class="webify-logo"
+            href="#home"
+        >
+            {name}
+        </a>
+
+        <button
+            class="menu-button"
+            onclick="toggleWebifyMenu()"
+        >
+            ☰
+        </button>
+
+        <nav id="webify-nav">
+
+            {navigation}
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<main>
+
+
+<section
+    class="webify-hero"
+    id="home"
+>
+
+    <div class="hero-glow"></div>
+
+    <div class="webify-container hero-container">
+
+        <div class="hero-content reveal">
+
+            <span class="hero-badge">
+                ✦ {esc(
+                    hero.get(
+                        "badge",
+                        "WELCOME"
+                    )
+                )}
+            </span>
+
+            <h1>
+                {esc(
+                    hero.get(
+                        "headline",
+                        "Build something remarkable."
+                    )
+                )}
+            </h1>
+
+            <p>
+                {esc(
+                    hero.get(
+                        "subtitle",
+                        plan.get(
+                            "summary",
+                            ""
+                        )
+                    )
+                )}
+            </p>
+
+            <div class="hero-actions">
+
+                <a
+                    class="webify-button"
+                    href="#contact"
+                >
+                    {esc(
+                        hero.get(
+                            "primary_cta",
+                            "Get Started"
+                        )
+                    )}
+                    →
+                </a>
+
+                {
+                    f'''
+                    <a
+                        class="secondary-button"
+                        href="#about"
+                    >
+                        {esc(
+                            hero.get(
+                                "secondary_cta"
+                            )
+                        )}
+                    </a>
+                    '''
+                    if hero.get(
+                        "secondary_cta"
+                    )
+                    else ""
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+{sections}
+
+
+</main>
+
+
+<footer class="webify-footer">
+
+    <div class="webify-container footer-content">
+
+        <div>
+
+            <strong>
+                {name}
+            </strong>
+
+            <p>
+                {esc(
+                    footer.get(
+                        "description",
+                        ""
+                    )
+                )}
+            </p>
+
+        </div>
+
+        <div>
+
+            {esc(
+                footer.get(
+                    "copyright",
+                    ""
+                )
+            )}
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+<script src="script.js"></script>
+
+</body>
+
+</html>
+"""
+
+
+# ============================================================
+# CSS
+# ============================================================
+
+def make_css():
+
+    return r"""
+*{
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    background:var(--background);
+    color:var(--ink);
+    font-family:var(--body-font),sans-serif;
+}
+
+a{
+    color:inherit;
+    text-decoration:none;
+}
+
+.webify-container{
+    width:min(1180px,92%);
+    margin:auto;
+}
+
+.webify-header{
+    position:sticky;
+    top:0;
+    z-index:100;
+    background:color-mix(
+        in srgb,
+        var(--background) 88%,
+        transparent
+    );
+    backdrop-filter:blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.07);
+}
+
+.nav{
+    min-height:76px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.webify-logo{
+    font-family:var(--heading-font);
+    font-size:1.25rem;
+    font-weight:700;
+}
+
+#webify-nav{
+    display:flex;
+    gap:28px;
+    align-items:center;
+}
+
+#webify-nav a{
+    color:var(--muted);
+    font-weight:600;
+    transition:.25s;
+}
+
+#webify-nav a:hover{
+    color:var(--brand);
+}
+
+.menu-button{
+    display:none;
+    border:0;
+    background:none;
+    font-size:1.5rem;
+}
+
+
+.webify-hero{
+    position:relative;
+    overflow:hidden;
+    min-height:680px;
+    display:grid;
+    place-items:center;
+    background:
+        radial-gradient(
+            circle at 80% 20%,
+            color-mix(
+                in srgb,
+                var(--brand) 25%,
+                transparent
+            ),
+            transparent 32%
+        ),
+        var(--background);
+}
+
+.hero-glow{
+    position:absolute;
+    width:500px;
+    height:500px;
+    background:var(--brand);
+    filter:blur(160px);
+    opacity:.12;
+    right:-200px;
+    top:-180px;
+}
+
+.hero-container{
+    position:relative;
+    z-index:2;
+}
+
+.hero-content{
+    max-width:900px;
+}
+
+.hero-badge{
+    display:inline-flex;
+    padding:9px 14px;
+    border-radius:999px;
+    background:var(--secondary);
+    color:var(--brand);
+    font-size:.78rem;
+    font-weight:800;
+    letter-spacing:.12em;
+}
+
+.hero h1{
+    font-family:var(--heading-font);
+    font-size:clamp(
+        3.5rem,
+        8vw,
+        7.5rem
+    );
+    line-height:.94;
+    letter-spacing:-.07em;
+    margin:25px 0;
+    max-width:1000px;
+}
+
+.hero p{
+    max-width:700px;
+    font-size:1.2rem;
+    line-height:1.8;
+    color:var(--muted);
+}
+
+.hero-actions{
+    display:flex;
+    gap:14px;
+    margin-top:32px;
+    flex-wrap:wrap;
+}
+
+.webify-button,
+.secondary-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    padding:15px 22px;
+    border-radius:13px;
+    font-weight:800;
+    transition:.25s;
+}
+
+.webify-button{
+    background:var(--brand);
+    color:#fff;
+    box-shadow:0 15px 35px
+        color-mix(
+            in srgb,
+            var(--brand) 28%,
+            transparent
+        );
+}
+
+.webify-button:hover{
+    transform:translateY(-3px);
+}
+
+.secondary-button{
+    border:1px solid rgba(0,0,0,.1);
+    background:var(--surface);
+}
+
+
+.webify-section{
+    padding:110px 0;
+    border-bottom:1px solid rgba(0,0,0,.07);
+}
+
+.section-heading{
+    max-width:800px;
+    margin-bottom:45px;
+}
+
+.eyebrow{
+    color:var(--brand);
+    font-size:.76rem;
+    font-weight:900;
+    letter-spacing:.16em;
+}
+
+.section-heading h2,
+.content-section h2,
+.contact-copy h2{
+    font-family:var(--heading-font);
+    font-size:clamp(
+        2.3rem,
+        5vw,
+        4.7rem
+    );
+    line-height:1;
+    letter-spacing:-.055em;
+    margin:14px 0;
+}
+
+.section-heading p,
+.content-section p,
+.contact-copy p{
+    color:var(--muted);
+    line-height:1.8;
+    font-size:1.05rem;
+}
+
+
+.card-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(240px,1fr)
+        );
+    gap:18px;
+}
+
+.webify-card{
+    background:var(--surface);
+    border:1px solid rgba(0,0,0,.07);
+    border-radius:var(--radius,20px);
+    padding:30px;
+    min-height:220px;
+    transition:.3s;
+}
+
+.webify-card:hover{
+    transform:translateY(-7px);
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.09);
+}
+
+.card-number{
+    color:var(--brand);
+    font-size:.78rem;
+    font-weight:800;
+    margin-bottom:25px;
+}
+
+.webify-card h3{
+    font-family:var(--heading-font);
+    font-size:1.4rem;
+}
+
+.webify-card p{
+    color:var(--muted);
+    line-height:1.7;
+}
+
+
+.testimonial-grid{
+    display:grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(280px,1fr)
+        );
+    gap:20px;
+}
+
+
+.contact-layout{
+    display:grid;
+    grid-template-columns:
+        1fr 1fr;
+    gap:80px;
+    align-items:start;
+}
+
+.webify-form{
+    display:grid;
+    gap:14px;
+}
+
+.webify-form input,
+.webify-form textarea{
+    width:100%;
+    padding:16px;
+    border:1px solid rgba(0,0,0,.1);
+    border-radius:12px;
+    background:var(--surface);
+    color:var(--ink);
+    font:inherit;
+}
+
+.webify-form textarea{
+    min-height:160px;
+    resize:vertical;
+}
+
+#webify-form-message{
+    color:var(--brand);
+    font-weight:700;
+}
+
+
+.webify-footer{
+    padding:40px 0;
+}
+
+.footer-content{
+    display:flex;
+    justify-content:space-between;
+    gap:30px;
+    color:var(--muted);
+}
+
+.footer-content strong{
+    color:var(--ink);
+    font-family:var(--heading-font);
+}
+
+.reveal{
+    animation:webifyReveal .7s ease both;
+}
+
+@keyframes webifyReveal{
+    from{
+        opacity:0;
+        transform:translateY(20px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+
+@media(max-width:760px){
+
+    .menu-button{
+        display:block;
+    }
+
+    #webify-nav{
+        display:none;
+        position:absolute;
+        top:76px;
+        left:0;
+        right:0;
+        padding:20px;
+        background:var(--surface);
+        flex-direction:column;
+        align-items:flex-start;
+        border-bottom:1px solid rgba(0,0,0,.08);
+    }
+
+    #webify-nav.open{
+        display:flex;
+    }
+
+    .webify-hero{
+        min-height:600px;
+    }
+
+    .hero h1{
+        font-size:clamp(
+            3rem,
+            15vw,
+            5rem
+        );
+    }
+
+    .contact-layout{
+        grid-template-columns:1fr;
+        gap:40px;
+    }
+
+    .webify-section{
+        padding:75px 0;
+    }
+
+    .footer-content{
+        flex-direction:column;
+    }
+}
+"""
+
+
+# ============================================================
+# JAVASCRIPT
+# ============================================================
+
+def make_js():
+
+    return r"""
+function toggleWebifyMenu(){
+
+    const nav =
+        document.getElementById(
+            "webify-nav"
+        );
+
+    nav.classList.toggle(
+        "open"
+    );
+}
+
+
+function submitWebifyForm(event){
+
+    event.preventDefault();
+
+    const message =
+        document.getElementById(
+            "webify-form-message"
+        );
+
+    message.textContent =
+        "Thanks! Your message has been received.";
+
+    event.target.reset();
+}
+"""
+
+
+# ============================================================
+# ZIP
+# ============================================================
+
+def build_website_zip(
+    plan,
+    requirements
+):
+
+    html = make_html(
+        plan,
+        requirements
+    )
+
+    css = make_css()
+
+    js = make_js()
+
+    memory = BytesIO()
+
+    with ZipFile(
+        memory,
+        "w",
+        ZIP_DEFLATED
+    ) as archive:
+
+        archive.writestr(
+            "index.html",
+            html
+        )
+
+        archive.writestr(
+            "style.css",
+            css
+        )
+
+        archive.writestr(
+            "script.js",
+            js
+        )
+
+        archive.writestr(
+            "README.md",
+            """# Webify Website
+
+Generated by Webify AI Website Builder.
+
+Files:
+- index.html
+- style.css
+- script.js
+
+Open index.html to preview the website.
+"""
+        )
+
+    return {
+
+        "title":
+            plan.get(
+                "title",
+                "Webify Website"
+            ),
+
+        "summary":
+            plan.get(
+                "summary",
+                ""
+            ),
+
+        "slug":
+            plan.get(
+                "slug",
+                "webify-site"
+            ),
+
+        "html":
+            html,
+
+        "zip_bytes":
+            memory.getvalue(),
+
+        "files": [
+            "index.html",
+            "style.css",
+            "script.js",
+            "README.md"
+        ]
+    }
